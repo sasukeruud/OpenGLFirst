@@ -53,6 +53,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 
+	//
 	glfwSetKeyCallback(window, key_callback);
 
 	glfwMakeContextCurrent(window);
@@ -155,16 +156,25 @@ int main(int argc, char** argv)
 
 	while (!glfwWindowShouldClose(window))
 	{
+		auto lastFrame = glfwGetTime();
+		auto currentFrame = glfwGetTime();
+		auto deltaTime = currentFrame - lastFrame;
+		
+
+		
 		// Keep running
 		glClear(GL_COLOR_BUFFER_BIT);
+		if (squareArg) {
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 		if (triangleArg) {
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
-		else if (squareArg) {
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
+		
 
 		glfwSwapBuffers(window);
+
+		// Window will react to input from user
 		glfwPollEvents();
 	}
 
