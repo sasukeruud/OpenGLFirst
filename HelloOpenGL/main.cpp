@@ -5,6 +5,10 @@
 #include <GLFW/glfw3.h>
 
 
+/*
+*Method to get key input from user
+* with esc input the window will be closed
+*/
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
