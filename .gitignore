@@ -33,6 +33,9 @@
 
 # IDE 
 *.sln
+*.user
+*.vcxproj
+*.filters
 
 # Folders
 .vs/
