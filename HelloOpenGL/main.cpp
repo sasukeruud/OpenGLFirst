@@ -5,6 +5,12 @@
 #include <GLFW/glfw3.h>
 
 
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
 int main(int argc, char** argv)
 {	
 	//Section 2
@@ -13,13 +19,11 @@ int main(int argc, char** argv)
 
 		TCLAP::ValueArg<std::string> widthArg("w", "width=", "Width of window", false, "600","string");
 		TCLAP::ValueArg<std::string> heightArg("H", "height=", "height of window", false, "600", "string");
-		TCLAP::ValueArg<std::string> triangleArg("t", "triangle", "Draw a triangle", false, "", "string");
-		TCLAP::ValueArg<std::string> squareArg("s", "square", "Draw a square", false, "", "string");
+		TCLAP::SwitchArg triangleArg("t", "triangle", "Draw a triangle",cmd, false);
+		TCLAP::SwitchArg squareArg("s", "square", "Draw a square", cmd, false);
 
 		cmd.add(widthArg);
 		cmd.add(heightArg);
-		cmd.add(triangleArg);
-		cmd.add(squareArg);
 
 		TCLAP::SwitchArg consoleArg("c", "console", "console", cmd, false);
 
@@ -45,6 +49,8 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 
+	glfwSetKeyCallback(window, key_callback);
+
 	glfwMakeContextCurrent(window);
 
 	//Section 4
@@ -59,6 +65,15 @@ int main(int argc, char** argv)
 		0.0f, 0.5f
 	};
 
+	float square[6 * 2] = {
+		-0.5f, -0.5f,
+		0.5f, -0.5f,
+		0.5f, 0.5f,
+		-0.5f, 0.5f,
+		-0.5f, -0.5f,
+		0.5f, 0.5f
+	};
+
 	//Create a vertex array
 	GLuint vertexArrayId;
 	glGenVertexArrays(1, &vertexArrayId);
@@ -70,7 +85,12 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER,vertexBufferId);
 
 	// Populate the vertex buffer 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+	if (triangleArg) {
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+	}
+	else if (squareArg) {
+		glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
+	}
 
 	// Set the layout of the bound buffer
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
@@ -133,10 +153,15 @@ int main(int argc, char** argv)
 	{
 		// Keep running
 		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+		if (triangleArg) {
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+		else if (squareArg) {
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 
 
@@ -150,6 +175,5 @@ int main(int argc, char** argv)
 		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
 	}
 
-	std::cin.get();
 	return EXIT_SUCCESS;
 }
