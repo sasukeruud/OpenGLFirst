@@ -80,13 +80,16 @@ int main(int argc, char** argv)
 	};
 
 	float triangleColors[] = {
-		0.01f,0.01f,0.60f,	//Red
-		0.01f,0.01f,0.60f,	//Green
-		0.01f,0.01f,0.60f	//Blue
+		0.01f,0.01f,0.60f,	
+		0.01f,0.01f,0.60f,	
+		0.01f,0.01f,0.60f	
 	};
 
 	float squareColors[] = {
-		0.0f
+		0.01f,0.01f,0.60f,	
+		0.01f,0.01f,0.60f,	
+		0.01f,0.01f,0.60f,
+		0.01f,0.01f,0.60f	
 	};
 
 	//Create a vertex array
@@ -102,6 +105,7 @@ int main(int argc, char** argv)
 
 		// Populate the vertex buffer 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_DYNAMIC_DRAW);
+		// Set the layout of the bound buffer
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);	//Location 0 on shader
 		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates												
 
@@ -110,17 +114,34 @@ int main(int argc, char** argv)
 		glGenBuffers(1, &colorBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColors), triangleColors, GL_DYNAMIC_DRAW);
+		// Set the layout of the bound buffer
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);	//Location 1 on shader
 		glEnableVertexAttribArray(1);													//Enable vertex atribute for color
 	}
 
 	if (!triangleArg) {
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_DYNAMIC_DRAW);
+		//Create a vertex buffer
+		GLuint vertexBufferSquare;
+		glGenBuffers(1, &vertexBufferSquare);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferSquare);
+
+		// Populate the vertex buffer 
+		glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_DYNAMIC_DRAW);
+		// Set the layout of the bound buffer
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);	//Location 0 on shader
+		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates		
+
+		//Color
+		GLuint colorBuffer;
+		glGenBuffers(1, &colorBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(squareColors), squareColors, GL_DYNAMIC_DRAW);
+		// Set the layout of the bound buffer
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);	//Location 1 on shader
+		glEnableVertexAttribArray(1);													//Enable vertex atribute for color
 	}
 
-	// Set the layout of the bound buffer
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
-	glEnableVertexAttribArray(0);
+
 
 	// Verex sahder code
 	const std::string vertexShaderSrc = R"(
@@ -201,7 +222,7 @@ int main(int argc, char** argv)
 	//Section 6
 	glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
-	float test[] = { 0.0f, 0.0f, 0.0f};
+	float changeColorTriangle[] = { 0.0f, 0.0f, 0.0f};
 
 	
 	double a{};
@@ -221,7 +242,16 @@ int main(int argc, char** argv)
 		// Keep running
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (!triangleArg) {
-			//glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDrawArrays(GL_QUADS, 0, 6);
+			//For loop to change color
+			if (a > 1) {
+				for (auto& c : changeColorTriangle) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
+				a = 0;
+				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 9 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+			}
 			
 		}
 		
@@ -231,11 +261,11 @@ int main(int argc, char** argv)
 
 			//For loop to change color
 			if (a > 1) {
-				for (auto& c : test) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
+				for (auto& c : changeColorTriangle) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
 				a = 0;
-				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
-				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
-				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
 			}
 		}
 		
