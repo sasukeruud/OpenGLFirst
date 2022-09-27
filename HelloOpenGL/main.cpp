@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 
 	//Section 5
 	float triangle[3 * 2] = {
-		-0.5f, -0.5f,
+		-0.5f, -0.5f, 
 		0.5f, -0.5f,
 		0.0f, 0.5f
 	};
@@ -79,22 +79,43 @@ int main(int argc, char** argv)
 		0.5f, 0.5f
 	};
 
+	float triangleColors[] = {
+		0.01f,0.01f,0.60f,	//Red
+		0.01f,0.01f,0.60f,	//Green
+		0.01f,0.01f,0.60f	//Blue
+	};
+
+	float squareColors[] = {
+		0.0f
+	};
+
 	//Create a vertex array
 	GLuint vertexArrayId;
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
 
-	//Create a vertex buffer
-	GLuint vertexBufferId;
-	glGenBuffers(1, &vertexBufferId);
-	glBindBuffer(GL_ARRAY_BUFFER,vertexBufferId);
+	if (!squareArg) {
+		//Create a vertex buffer
+		GLuint vertexBufferTriangle;
+		glGenBuffers(1, &vertexBufferTriangle);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTriangle);
 
-	// Populate the vertex buffer 
-	if (triangleArg) {
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+		// Populate the vertex buffer 
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);	//Location 0 on shader
+		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates												
+
+		//Color
+		GLuint colorBuffer;
+		glGenBuffers(1, &colorBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColors), triangleColors, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);	//Location 1 on shader
+		glEnableVertexAttribArray(1);													//Enable vertex atribute for color
 	}
-	else if (squareArg) {
-		glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
+
+	if (!triangleArg) {
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_DYNAMIC_DRAW);
 	}
 
 	// Set the layout of the bound buffer
@@ -117,6 +138,22 @@ int main(int argc, char** argv)
 	}
 	)";
 
+	const std::string vertexShaderSrc2 = R"(
+	layout(location = 0) in vec2 position;
+	layout(location = 1) in vec3 color; // this is the input color from the vertex specification
+
+	out vec3 vs_color; //this newly created variable that will output color to the fragment shader
+		               // as opposed to the gl_Position placeholder, you can name it and type it
+			           // as you see fit.
+
+	void main()
+	{
+	gl_Position = vec4(position, 0.0, 1.0);
+	vs_color = color; // Here we do the color transfer;
+	}
+
+	)";
+
 	// Fragment shader code
 	const std::string fragmentShaderSrc = R"(
 	#verison 430 core
@@ -127,15 +164,25 @@ int main(int argc, char** argv)
 	}
 	)";
 
+	const std::string fragmentShaderSrc2 = R"(
+	//Fragment shader
+	in vec3 vs_color; //The name should be the same as the corresponding output variable 
+		              //in the vertex shader
+	out vec3 finalColor;
+	void main()
+	{
+	finalColor = vs_color;
+	})";
+
 	// Compile the vertex shader
 	auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const GLchar* vss = vertexShaderSrc.c_str();
+	const GLchar* vss = vertexShaderSrc2.c_str();
 	glShaderSource(vertexShader, 1, &vss, nullptr);
 	glCompileShader(vertexShader);
 
 	// Compile the fragment shader
 	auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const GLchar* fss = fragmentShaderSrc.c_str();
+	const GLchar* fss = fragmentShaderSrc2.c_str();
 	glShaderSource(fragmentShader, 1, &fss, nullptr);
 	glCompileShader(fragmentShader);
 
@@ -154,21 +201,42 @@ int main(int argc, char** argv)
 	//Section 6
 	glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
+	float test[] = { 0.0f, 0.0f, 0.0f};
+
+	
+	double a{};
+
+	double currentFrame = glfwGetTime();
+	double lastFrame = currentFrame;
+	double deltaTime{};
+	
 	while (!glfwWindowShouldClose(window))
 	{
-		auto lastFrame = glfwGetTime();
-		auto currentFrame = glfwGetTime();
-		auto deltaTime = currentFrame - lastFrame;
+		currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 		
-
+		a += deltaTime * 10.0;
 		
 		// Keep running
 		glClear(GL_COLOR_BUFFER_BIT);
-		if (squareArg) {
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		if (!triangleArg) {
+			//glDrawArrays(GL_TRIANGLES, 0, 6);
+			
 		}
-		if (triangleArg) {
+		
+		//For drawing a triangle on the sceen with changing triangleColors
+		if (!squareArg) {
 			glDrawArrays(GL_TRIANGLES, 0, 3);
+
+			//For loop to change color
+			if (a > 1) {
+				for (auto& c : test) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
+				a = 0;
+				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), test);	//Area of buffer that will change (color area)
+			}
 		}
 		
 
