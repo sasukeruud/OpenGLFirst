@@ -4,7 +4,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-
 /*
 *Method to get key input from user
 * with esc input the window will be closed
@@ -93,12 +92,15 @@ int main(int argc, char** argv)
 	};
 
 	//Create a vertex array
-	GLuint vertexArrayId;
+	GLuint vertexArrayId, vertexArrayId1;
+	GLuint triangleColorBuffer, squareColorBuffer;
+	glGenBuffers(1, &triangleColorBuffer);
+	glGenBuffers(1, &squareColorBuffer);
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
 
 	if (!squareArg) {
-		//Create a vertex buffer
+		//Create a vertex buffer triangle
 		GLuint vertexBufferTriangle;
 		glGenBuffers(1, &vertexBufferTriangle);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTriangle);
@@ -110,14 +112,21 @@ int main(int argc, char** argv)
 		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates												
 
 		//Color
-		GLuint colorBuffer;
-		glGenBuffers(1, &colorBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		//GLuint triangleColorBuffer;
+		//glGenBuffers(1, &triangleColorBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, triangleColorBuffer);
+		//glBindBuffer(GL_ARRAY_BUFFER, vertexArrayId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColors), triangleColors, GL_DYNAMIC_DRAW);
 		// Set the layout of the bound buffer
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);	//Location 1 on shader
 		glEnableVertexAttribArray(1);													//Enable vertex atribute for color
+	}else{
+		glDeleteVertexArrays(1, &vertexArrayId);
 	}
+
+	//Create a vertex array
+	glGenVertexArrays(1, &vertexArrayId1);
+	glBindVertexArray(vertexArrayId1);
 
 	if (!triangleArg) {
 		//Create a vertex buffer
@@ -132,18 +141,18 @@ int main(int argc, char** argv)
 		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates		
 
 		//Color
-		GLuint colorBuffer;
-		glGenBuffers(1, &colorBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		//GLuint squareColorBuffer;
+		//glGenBuffers(1, &squareColorBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, squareColorBuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(squareColors), squareColors, GL_DYNAMIC_DRAW);
 		// Set the layout of the bound buffer
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);	//Location 1 on shader
 		glEnableVertexAttribArray(1);													//Enable vertex atribute for color
+	}else{
+		glDeleteVertexArrays(1, &vertexArrayId1);
 	}
 
-
-
-	// Verex sahder code
+	// Verex shader code
 	const std::string vertexShaderSrc = R"(
 	#version 430 core 
 
@@ -223,9 +232,10 @@ int main(int argc, char** argv)
 	glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
 	float changeColorTriangle[] = { 0.0f, 0.0f, 0.0f};
-
+	float changeColorSquare[] = { 0.0f, 0.0f, 0.0f };
 	
 	double a{};
+	double b{};
 
 	double currentFrame = glfwGetTime();
 	double lastFrame = currentFrame;
@@ -237,36 +247,44 @@ int main(int argc, char** argv)
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		
-		a += deltaTime * 10.0;
+		a += deltaTime * 5.0;
+		b += deltaTime * 3.0;
 		
 		// Keep running
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (!triangleArg) {
-			glDrawArrays(GL_QUADS, 0, 6);
+			glBindVertexArray(vertexArrayId1);
+			glBindBuffer(GL_ARRAY_BUFFER, squareColorBuffer); //NEEDS TO BE REBIND 
+			glDrawArrays(GL_QUADS, 0, 6); //Draws a square
+			
 			//For loop to change color
 			if (a > 1) {
-				for (auto& c : changeColorTriangle) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
+				for (auto &c : changeColorSquare) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
 				a = 0;
-				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
-				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
-				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
-				glBufferSubData(GL_ARRAY_BUFFER, 9 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), changeColorSquare);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), changeColorSquare);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), changeColorSquare);	//Area of buffer that will change (color area)
+				glBufferSubData(GL_ARRAY_BUFFER, 9 * sizeof(float), 3 * sizeof(float), changeColorSquare);	//Area of buffer that will change (color area)
 			}
 			
+			glBindVertexArray(0);
 		}
-		
+
 		//For drawing a triangle on the sceen with changing triangleColors
 		if (!squareArg) {
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			glBindVertexArray(vertexArrayId);
+			glBindBuffer(GL_ARRAY_BUFFER, triangleColorBuffer); //NEEDS TO BE REBIND 
+			glDrawArrays(GL_TRIANGLES, 0, 3); //Draws a triangle
 
 			//For loop to change color
-			if (a > 1) {
-				for (auto& c : changeColorTriangle) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
-				a = 0;
+			if (b > 1) {
+				for (auto &c : changeColorTriangle) c = (rand() % 100) / 100.0f; //Loop to get a number between 0 and 99 and divided by 100
+				b = 0;
 				glBufferSubData(GL_ARRAY_BUFFER, 0 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
 				glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
 				glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float), 3 * sizeof(float), changeColorTriangle);	//Area of buffer that will change (color area)
 			}
+			glBindVertexArray(0);
 		}
 		
 
