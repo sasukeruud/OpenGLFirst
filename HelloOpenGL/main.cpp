@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "GeometricTools.h"
+
 /*
 *Method to get key input from user
 * with esc input the window will be closed
@@ -106,7 +108,7 @@ int main(int argc, char** argv)
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTriangle);
 
 		// Populate the vertex buffer 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GeometricTools::UnitTriangle2D), GeometricTools::UnitTriangle2D, GL_DYNAMIC_DRAW);
 		// Set the layout of the bound buffer
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);	//Location 0 on shader
 		glEnableVertexAttribArray(0);													//Enable vertex atribute for cordinates												
